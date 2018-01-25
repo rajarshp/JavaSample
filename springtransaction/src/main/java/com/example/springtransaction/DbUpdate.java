@@ -2,10 +2,11 @@ package com.example.springtransaction;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
-public class DbUpdate 
+public class DbUpdate  extends Thread
 {
 	private JdbcTemplate jdbcTemplate;
 	private User usr;
@@ -17,7 +18,7 @@ public class DbUpdate
 	private ArrayList<Account> acclist;
 	private CreateUser newusr;
 	
-	public DbUpdate(JdbcTemplate jd)
+	public DbUpdate(JdbcTemplate jd) 
 	{
 		this.jdbcTemplate = jd;
 		this.usrlist = new ArrayList<User>();
@@ -32,12 +33,21 @@ public class DbUpdate
 	public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
+	
+	public void run()
+	{
+		create();
+	}
 
-	public void cretate()
+	//@Transactional(rollbackFor={Exception.class})
+	public void create()
 	{
 		try
 		{
-			for (int i = 1;i<6;i++)
+			StopWatch sw = new StopWatch();
+			int counter = 1000;
+			sw.start();
+			for (int i = 1;i<=100000;i++)
 			{
 				usr = new User();
 				bal = new Balance();
@@ -56,7 +66,21 @@ public class DbUpdate
 				usrlist.add(usr);
 				ballist.add(bal);
 				acclist.add(acc);
+				
+				if(usrlist.size() >= 1000)
+				{
+					executeDB(counter);
+					sw.suspend();
+					usrlist.clear();
+					ballist.clear();
+					acclist.clear();
+					System.out.println(counter + " updated: "+sw);
+					counter +=1000;
+					
+					sw.resume();
+				}
 			}
+			sw.stop();
 		}
 		catch(Exception e)
 		{
@@ -65,24 +89,32 @@ public class DbUpdate
 	}
 	
 	@Transactional(rollbackFor={Exception.class})
-	public void executeDB() throws Exception
+	public void executeDB(int count) throws Exception
 	{
-		if(usrlist.size() >= 5)
-			{
+		
 				CreateAccount newacc = new CreateAccount(jdbcTemplate);
 				CreateUser newusr = new CreateUser(jdbcTemplate);
-				BalanceUpdate newbal = new BalanceUpdate(jdbcTemplate);
+				//BalanceUpdate newbal = new BalanceUpdate(jdbcTemplate);
 				newacc.addList(acclist);
 				newusr.addToList(usrlist);
-				newbal.addList(ballist);
+				//newbal.addList(ballist);
 				
 				newusr.execute(); // insert data to db
 				newacc.addAccount(); // insert data to db
-				newbal.addBalance(); // insert data to db
+				//newbal.addBalance(); // insert data to db
 				
+				newacc.getAccList().clear();
+				newusr.getUserList().clear();
+				//newbal.getBalanceList().clear();
+				if(count == 5000)
+				{
+					Thread.sleep(1000);
+					throw new Exception("Rollback");
+				}
+				count += 1000;
 				//throw new Exception();
 				
-			}
+			
 		}
 		
 	

@@ -32,6 +32,10 @@ public class CreateAccount
 		accList = acc;
 	}
 	
+	public ArrayList<Account> getAccList() {
+		return accList;
+	}
+
 	public boolean addAccount() 
 	{
 		String sql = "insert into account(acnumber,userid) values(?,?)";

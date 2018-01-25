@@ -33,6 +33,10 @@ public class CreateUser
 		userList = usr;
 	}
 	
+	public ArrayList<User> getUserList() {
+		return userList;
+	}
+
 	public boolean execute()
 	{
 		String sql = "insert into userdetails(id,firstname,lastname) values(?,?,?)";

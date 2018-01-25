@@ -32,6 +32,10 @@ public class BalanceUpdate
 		balanceList = bal;
 	}
 	
+	public ArrayList<Balance> getBalanceList() {
+		return balanceList;
+	}
+
 	public void addBalance() throws Exception 
 	{
 		String sql = "insert into balance(acnum,balance) values(?,?)";
@@ -56,6 +60,6 @@ public class BalanceUpdate
 		
 		
 
-throw new Exception("Rollback");
+//throw new Exception("Rollback");
 	}
 }

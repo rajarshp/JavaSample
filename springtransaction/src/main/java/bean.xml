@@ -32,6 +32,28 @@
 <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">  
 <property name="dataSource" ref="dataSource"></property>  
 </bean> 
+
+<!-- <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+        <property name="poolName" value="springHikariCP" />
+        <property name="connectionTestQuery" value="SELECT 1 from dual" />
+        <property name="dataSourceClassName" value="oracle.jdbc.pool.OracleDataSource" />
+        <property name="maximumPoolSize" value="30" />
+        <property name="idleTimeout" value="30000" />
+		<property name="AutoCommit" value="true" />
+        <property name="dataSourceProperties">
+            <props>
+                <prop key="url">jdbc:oracle:thin:@localhost:1521:xe</prop>
+                <prop key="user">system</prop>
+                <prop key="password">root</prop>
+            </props>
+        </property>
+    </bean>
+     <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+          <constructor-arg ref="hikariConfig" />
+    </bean> -->
+    <!-- <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">  
+    <property name="dataSource" ref="dataSource"></property>  
+    </bean> -->
  
 <bean id="startit" class="com.example.springtransaction.GlobalClass">  
 <property name="jdbcTemplate" ref="jdbcTemplate"></property>  
