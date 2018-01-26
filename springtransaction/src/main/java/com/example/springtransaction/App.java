@@ -22,27 +22,36 @@ public class App
         
         //DbUpdate db = new DbUpdate(GlobalClass.getJdbcTemplate());
         
-        ExecutorService ex = Executors.newFixedThreadPool(1);
-        
-        for (int i =0;i<1;i++)
-        {
-        	
-        	ex.submit(db);
-        }
-        
-        ex.shutdown();
-        while(ex.isTerminated())
-        {
-        	System.out.println("All completed");
-        }
-        
-//        try {
-//        	db.cretate();
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+//        ExecutorService ex = Executors.newFixedThreadPool(1);
 //        
-//        System.out.println("Done");
+//        for (int i =0;i<1;i++)
+//        {
+//        	
+//        	ex.submit(db);
+//        }
+//        
+//        ex.shutdown();
+//        while(ex.isTerminated())
+//        {
+//        	System.out.println("All completed");
+//        }
+        int count=0;
+        for(int i=0;i<1000;i++)
+		{
+			db.create(i);
+			count++;
+			if(count == 1000)
+			try 
+			{
+				db.executeDB();
+				count =0;
+			} catch (Exception e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+        
+        System.out.println("Done");
     }
 }

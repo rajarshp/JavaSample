@@ -18,6 +18,11 @@ public class CreateAccount
 		this.accList = new ArrayList<Account>();
 	}
 	
+	public CreateAccount()
+	{
+		this.accList = new ArrayList<Account>();
+	}
+	
 	public JdbcTemplate getJdbcTemplate() 
 	{
 		return jdbcTemplate;
@@ -36,7 +41,7 @@ public class CreateAccount
 		return accList;
 	}
 
-	public boolean addAccount() 
+	public void addAccount(int count) throws Exception 
 	{
 		String sql = "insert into account(acnumber,userid) values(?,?)";
 		
@@ -57,7 +62,12 @@ public class CreateAccount
 					return accList.size();
 				}
 			});
-		
-		return true;
+			System.out.println("New accounts acreated "+count);
+			if(count ==5000)
+			{
+				throw new Exception();
+			}
+			//throw new Exception();
+		//return true;
 	}
 }

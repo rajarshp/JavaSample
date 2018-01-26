@@ -28,6 +28,12 @@ public class CreateUser
 		this.jdbcTemplate = jdbcTemplate;
 	}
 	
+	public CreateUser() 
+	{
+		this.userList = new ArrayList<User>();
+
+	}
+	
 	public void addToList(ArrayList<User> usr)
 	{
 		userList = usr;
@@ -61,7 +67,7 @@ public class CreateUser
 				}
 			});
 		
-		
+		System.out.println("new users created");
 		
 		return true;
 	}
