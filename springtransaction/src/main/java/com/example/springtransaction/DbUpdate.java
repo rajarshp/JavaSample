@@ -117,8 +117,10 @@ public class DbUpdate  //extends Thread
 	}
 	
 	@Transactional(isolation = Isolation.READ_COMMITTED, propagation=Propagation.REQUIRED,readOnly=false,rollbackFor=Exception.class)
-	public void executeDB() throws Exception
+	public void executeDB(int i) throws Exception
 	{
+		StopWatch sw = new StopWatch();
+		sw.start();
 		//System.out.println("Size: "+usrlist.size());
 //				CreateAccount newacc = new CreateAccount(jdbcTemplate);
 //				CreateUser newusr = new CreateUser(jdbcTemplate);
@@ -128,16 +130,16 @@ public class DbUpdate  //extends Thread
 				getNewusr().addToList(usrlist);
 				//newbal.addList(ballist);
 				
-				getNewusr().execute(); // insert data to db
+				getNewusr().execute(i); // insert data to db
 				//System.out.println("New users created " + count);
 				//Thread.sleep(10000000);
-				//getNewacc().addAccount(count); // insert data to db
+				getNewacc().addAccount(i); // insert data to db
 				//newbal.addBalance(); // insert data to db
 				//System.out.println("New accounts created " + count);
 				getNewacc().getAccList().clear();
 				getNewusr().getUserList().clear();
 				//newbal.getBalanceList().clear();
-//				if(count == 5000)
+//				if(i == 5000)
 //				{
 //					Thread.sleep(1000);
 //					throw new Exception("Rollback");
@@ -148,8 +150,10 @@ public class DbUpdate  //extends Thread
 //				{
 //					throw new Exception();
 //				}
-				Thread.sleep(10000);
-				throw new Exception("Rollback");
+//				Thread.sleep(10000);
+//				throw new Exception("Rollback");
+				sw.stop();
+				System.out.println("Tike taken by " + i + " records to insert: " +sw);
 			
 		}
 		

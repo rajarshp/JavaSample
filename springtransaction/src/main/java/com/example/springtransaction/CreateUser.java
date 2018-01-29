@@ -43,7 +43,7 @@ public class CreateUser
 		return userList;
 	}
 
-	public boolean execute()
+	public boolean execute(int i)
 	{
 		String sql = "insert into userdetails(id,firstname,lastname) values(?,?,?)";
 		
@@ -67,7 +67,7 @@ public class CreateUser
 				}
 			});
 		
-		System.out.println("new users created");
+		System.out.println("new users created" +i);
 		
 		return true;
 	}

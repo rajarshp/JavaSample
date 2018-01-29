@@ -3,6 +3,7 @@ package com.example.springtransaction;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -36,14 +37,17 @@ public class App
 //        	System.out.println("All completed");
 //        }
         int count=0;
-        for(int i=0;i<1000;i++)
+        StopWatch sw = new StopWatch();
+        sw.start();
+        for(int i=1;i<=1000000;i++)
 		{
 			db.create(i);
 			count++;
-			if(count == 1000)
+			if(count == 5000)
+			{
 			try 
 			{
-				db.executeDB();
+				db.executeDB(i);
 				count =0;
 			} catch (Exception e) 
 			{
@@ -51,7 +55,8 @@ public class App
 				e.printStackTrace();
 			}
 		}
-        
-        System.out.println("Done");
+		}
+        sw.stop();
+        System.out.println("Done - "+sw);
     }
 }
