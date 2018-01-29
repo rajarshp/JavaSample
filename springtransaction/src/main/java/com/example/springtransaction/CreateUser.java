@@ -56,7 +56,7 @@ public class CreateUser
 					
 					ps.setInt(++k, usr.getId());
 					ps.setString(++k, usr.getFirstName());
-					ps.setString(++k, usr.getLastName());
+					ps.setString(++k, usr.getLastName()); 
 					
 					
 				}

@@ -60,7 +60,7 @@
 </bean>  
 
 <bean id="newacc" class="com.example.springtransaction.CreateAccount">  
-<property name="jdbcTemplate" ref="jdbcTemplate"></property>  
+<property name="jdbcTemplate" ref="jdbcTemplate"></property>   
 </bean> 
 <bean id="newusr" class="com.example.springtransaction.CreateUser">  
 <property name="jdbcTemplate" ref="jdbcTemplate"></property>  

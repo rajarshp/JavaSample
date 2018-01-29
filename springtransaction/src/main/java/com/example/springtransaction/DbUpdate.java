@@ -153,7 +153,7 @@ public class DbUpdate  //extends Thread
 //				Thread.sleep(10000);
 //				throw new Exception("Rollback");
 				sw.stop();
-				System.out.println("Tike taken by " + i + " records to insert: " +sw);
+				System.out.println("Tike taken by " + i + " records to insert: " +sw); 
 			
 		}
 		
