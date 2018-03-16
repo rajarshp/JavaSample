@@ -18,6 +18,23 @@ public class MainClass
 		cbo.displayCountry(countryList, "UK", countryList.length);
 		cbo.displayCountryAndCode(countryList, countryList.length);
 		cbo.updateIsdCodeOfSpecificCountry(countryList, "USA", "01", countryList.length);
+		
+		try
+		{
+			//System.exit(0);
+			throw new Exception();
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			//System.exit(0);
+		}
+		finally
+		{
+			System.out.println("In finally block");
+			System.exit(0);
+		}
 
 	}
 
