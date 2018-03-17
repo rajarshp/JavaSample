@@ -21,10 +21,10 @@ public class Main
 		int length = scanner.nextInt();
 		String line = scanner.next();
 		
-		while(xyzIndex != -1 && pqrIndex != -1)
+		while(xyzIndex != -1)
 		{
 			String xyz = "xyz";
-			String pqr = "pqr";
+			
 			
 			xyzIndex = line.indexOf(xyz,xyzIndex);
 
@@ -34,7 +34,12 @@ public class Main
 		        xyzIndex += xyz.length();
 		    }
 		    
-		    pqrIndex = line.indexOf(pqr,pqrIndex);
+		    
+		}
+		while(pqrIndex != -1) 
+		{
+			String pqr = "pqr";
+			pqrIndex = line.indexOf(pqr,pqrIndex);
 
 		    if(pqrIndex != -1)
 		    {
@@ -42,7 +47,6 @@ public class Main
 		        pqrIndex += pqr.length();
 		    }
 		}
-		
 		System.out.println(xyzCount +" " + pqrCount);
 
 	}
