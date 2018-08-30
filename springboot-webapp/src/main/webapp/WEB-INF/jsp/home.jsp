@@ -5,6 +5,6 @@
     <title>Welcome</title>
 </head>
 <body>
-<h4>Welcome</h4>
+<h4>Welcome ${name }</h4>
 </body>
 </html>
