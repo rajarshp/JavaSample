@@ -1,0 +1,17 @@
+type Tutorial {
+	Long: Long!
+	title: String!
+	description: String
+	author: Author
+}
+
+extend type Query {
+	findAllTutorials: [Tutorial]!
+	countTutorials: Long!
+}
+
+extend type Mutation {
+	createTutorial(title: String!, description: String, author: Long!): Tutorial!
+	updateTutorial(Long: Long!, title: String, description: String): Tutorial!
+	deleteTutorial(Long: Long!): Boolean
+}
