@@ -1,8 +1,7 @@
 package com.mycode.foodorderapp.service;
 
 import com.mycode.foodorderapp.model.Customer;
-import com.mycode.foodorderapp.model.FoodMenu;
-import com.mycode.foodorderapp.repository.MenuRepository;
+import com.mycode.foodorderapp.repository.CustomerRepository;
 import com.mycode.foodorderapp.util.SampleUserDataGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +9,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,31 +19,27 @@ import java.util.concurrent.Future;
 
 @Service
 @Slf4j
-public class MenuService {
-
+public class CustomerService {
     @Autowired
     private SampleUserDataGenerator sampleUserDataGenerator;
 
     @Autowired
-    private MenuRepository menuRepository;
-
-    public Object testMethod(){
-        FoodMenu foodMenu = new FoodMenu();
-        foodMenu.setName("Test");
-        foodMenu.setDescription("test");
-        foodMenu.setPrice(100);
-
-        String id = menuRepository.save(foodMenu).getId();
-        log.info("Items created " + id);
-        return menuRepository.findById(id);
+    private CustomerRepository customerRepository;
+    public Customer registerCustomer(Customer customer) {
+        Customer newCustomer = customerRepository.save(customer);
+        newCustomer.setPassword("");
+        log.info("new customer created "+newCustomer);
+        return newCustomer;
     }
 
-    public List<FoodMenu> getMenu() {
-        return menuRepository.findAll();
+    public boolean checkAlreadyRegisteredEmail(String email) {
+        int count = customerRepository.countByEmail(email);
+        log.info("Already registered email? count ="+count);
+        return count >1;
     }
 
     public String testDBPerformance() {
-        List<FoodMenu> customerList = sampleUserDataGenerator.generateSampleMenuData();
+        List<Customer> customerList = sampleUserDataGenerator.generateSampleUserData();
         insertBatch(customerList);
 
         return "Success";
@@ -53,11 +49,11 @@ public class MenuService {
             value = { Exception.class },
             maxAttempts = 3,
             backoff = @Backoff(delay = 5000))
-    public void insertBatch(List<FoodMenu> batch) {
+    public void insertBatch(List<Customer> batch) {
         int numThreads = 4; // Set the number of threads
         int batchSize = 1000; // Set the batch size
 
-        List<List<FoodMenu>> partitions = new ArrayList<>();
+        List<List<Customer>> partitions = new ArrayList<>();
         for (int i = 0; i < batch.size(); i += batchSize) {
             int end = Math.min(i + batchSize, batch.size());
             partitions.add(batch.subList(i, end));
@@ -66,10 +62,11 @@ public class MenuService {
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         List<Future<?>> futures = new ArrayList<>();
 
-        for (List<FoodMenu> partition : partitions) {
+        for (List<Customer> partition : partitions) {
             futures.add(executor.submit(() -> {
                 try {
-                    menuRepository.saveAll(partition);
+                    customerRepository.saveAllAndFlush(partition);
+                    log.info("Customer Saved "+ partition.size());
                 } catch (Exception e) {
                     log.error("Failed to insert partition: {}", partition, e);
                     throw e;

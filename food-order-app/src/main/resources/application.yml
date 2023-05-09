@@ -7,7 +7,9 @@ logging:
     org:
       springframework:
         web: ERROR
-        hibernate: ERROR
+        hibernate: DEBUG
+        data:
+          jpa: DEBUG
     com:
       mycode:
         foodorderapp: INFO

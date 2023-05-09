@@ -1,5 +1,7 @@
 package com.mycode.foodorderapp.config;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,13 +33,15 @@ public class MysqlConfig {
     
     @Bean(name = "mysqlDataSource")
     public DataSource mysqlDataSource() {
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(mysqlDriver);
-        dataSource.setUrl(mysqlUrl);
-        dataSource.setUsername(mysqlUserName);
-        dataSource.setPassword(mysqlPassword);
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(mysqlUrl);
+        config.setUsername(mysqlUserName);
+        config.setPassword(mysqlPassword);
+        config.setDriverClassName(mysqlDriver);
+        config.setConnectionTimeout(30000);
+        config.setMaximumPoolSize(10);
+        return new HikariDataSource(config);
 
-        return dataSource;
     }
 
     @Bean
