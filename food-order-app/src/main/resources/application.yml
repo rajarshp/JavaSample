@@ -7,9 +7,9 @@ logging:
     org:
       springframework:
         web: ERROR
-        hibernate: DEBUG
+        hibernate: ERROR
         data:
-          jpa: DEBUG
+          jpa: ERROR
     com:
       mycode:
         foodorderapp: INFO
@@ -24,8 +24,8 @@ mysql:
 spring:
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: create
+    show-sql: false
   jackson:
     mapper:
       ACCEPT_CASE_INSENSITIVE_PROPERTIES: true

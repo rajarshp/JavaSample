@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -38,15 +39,18 @@ public class MysqlConfig {
         config.setUsername(mysqlUserName);
         config.setPassword(mysqlPassword);
         config.setDriverClassName(mysqlDriver);
-        config.setConnectionTimeout(30000);
-        config.setMaximumPoolSize(10);
+        config.setConnectionTimeout(60000);
+        config.setMaximumPoolSize(20);
+        config.setAutoCommit(true);
         return new HikariDataSource(config);
 
     }
 
     @Bean
     public PlatformTransactionManager transactionManager(@Qualifier("mysqlDataSource") DataSource dataSource) {
-        return new DataSourceTransactionManager(dataSource);
+        JpaTransactionManager transactionManager = new JpaTransactionManager();
+        transactionManager.setDataSource(dataSource);
+        return transactionManager;
     }
     
     // Define your MySQL repositories

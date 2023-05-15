@@ -10,6 +10,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,25 +43,19 @@ public class MenuService {
         return menuRepository.findAll();
     }
 
-    public String testDBPerformance() {
-        List<FoodMenu> customerList = sampleUserDataGenerator.generateSampleMenuData();
-        insertBatch(customerList);
-
-        return "Success";
-    }
-
     @Retryable(
             value = { Exception.class },
             maxAttempts = 3,
             backoff = @Backoff(delay = 5000))
-    public void insertBatch(List<FoodMenu> batch) {
+    public String testDBPerformance() {
+        List<FoodMenu> customerList = sampleUserDataGenerator.generateSampleMenuData();
         int numThreads = 4; // Set the number of threads
         int batchSize = 1000; // Set the batch size
 
         List<List<FoodMenu>> partitions = new ArrayList<>();
-        for (int i = 0; i < batch.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, batch.size());
-            partitions.add(batch.subList(i, end));
+        for (int i = 0; i < customerList.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, customerList.size());
+            partitions.add(customerList.subList(i, end));
         }
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -69,7 +64,7 @@ public class MenuService {
         for (List<FoodMenu> partition : partitions) {
             futures.add(executor.submit(() -> {
                 try {
-                    menuRepository.saveAll(partition);
+                    insertBatch(partition);
                 } catch (Exception e) {
                     log.error("Failed to insert partition: {}", partition, e);
                     throw e;
@@ -86,6 +81,15 @@ public class MenuService {
         }
 
         executor.shutdown();
+
+
+        return "Success";
+    }
+
+  @Transactional
+    public void insertBatch(List<FoodMenu> batch) {
+        menuRepository.saveAll(batch);
+        log.info(batch.size() + " records persisted in the db");
     }
 
     @Recover
