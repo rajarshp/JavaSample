@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: jobschedule
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quartz
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: MyScheduler
+            instanceId: AUTO
+          threadPool:
+            class: org.quartz.simpl.SimpleThreadPool
+            threadCount: 5
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+            tablePrefix: QRTZ_
+            isClustered: true
+          dataSource:
+            myDS:
+              driver: org.postgresql.Driver
+              URL: jdbc:postgresql://localhost:5432/quartz
+              user: postgres
+              password: postgres
+              maxConnections: 5
