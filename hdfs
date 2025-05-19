@@ -1,0 +1,335 @@
+hdfs-chart/
+├── Chart.yaml
+├── values.yaml
+└── templates/
+    ├── configmap.yaml
+    ├── journalnode.yaml
+    ├── zookeeper.yaml
+    ├── namenode.yaml
+    ├── datanode.yaml
+    ├── services.yaml
+    └── route.yaml
+
+---
+
+# Chart.yaml
+apiVersion: v2
+name: hdfs
+version: 0.1.0
+description: A Helm chart for fault-tolerant, scalable Apache HDFS on OpenShift
+
+---
+
+# values.yaml
+replicaCount:
+  journalnode: 3
+  zookeeper: 3
+  namenode: 2
+  datanode: 3
+  zkfc: 2
+
+image:
+  repository: ghcr.io/apache/hadoop
+  tag: latest
+  pullPolicy: IfNotPresent
+
+resources: {}
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+
+service:
+  type: ClusterIP
+
+route:
+  enabled: true
+  host: hdfs-ui.example.com
+
+---
+
+# templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdfs-config
+  labels:
+    app: hdfs
+data:
+  core-site.xml: |
+    <configuration>
+      <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://hdfs-namenode:8020</value>
+      </property>
+    </configuration>
+  hdfs-site.xml: |
+    <configuration>
+      <property>
+        <name>dfs.replication</name>
+        <value>3</value>
+      </property>
+      <property>
+        <name>dfs.journalnode.edits.dir</name>
+        <value>/hadoop/dfs/journal</value>
+      </property>
+    </configuration>
+
+---
+
+# templates/journalnode.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: journalnode
+spec:
+  replicas: {{ .Values.replicaCount.journalnode }}
+  selector:
+    matchLabels:
+      app: journalnode
+  serviceName: journalnode
+  template:
+    metadata:
+      labels:
+        app: journalnode
+    spec:
+      containers:
+      - name: journalnode
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        command: ["hdfs", "journalnode"]
+        ports:
+        - containerPort: 8485
+        volumeMounts:
+        - name: data
+          mountPath: /hadoop/dfs/journal
+      volumes:
+        - name: config-volume
+          configMap:
+            name: hdfs-config
+      {{- if .Values.persistence.enabled }}
+      volumeClaimTemplates:
+        - metadata:
+            name: data
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: {{ .Values.persistence.size }}
+            {{- if .Values.persistence.storageClass }}
+            storageClassName: "{{ .Values.persistence.storageClass }}"
+            {{- end }}
+      {{- end }}
+
+---
+
+# templates/zookeeper.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper
+spec:
+  replicas: {{ .Values.replicaCount.zookeeper }}
+  selector:
+    matchLabels:
+      app: zookeeper
+  serviceName: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: zookeeper:3.7
+        ports:
+        - containerPort: 2181
+
+---
+
+# templates/namenode.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: namenode
+spec:
+  replicas: {{ .Values.replicaCount.namenode }}
+  selector:
+    matchLabels:
+      app: namenode
+  serviceName: namenode
+  template:
+    metadata:
+      labels:
+        app: namenode
+    spec:
+      containers:
+      - name: namenode
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        command: ["hdfs", "namenode"]
+        ports:
+        - containerPort: 8020
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/hadoop
+        - name: data
+          mountPath: /hadoop/dfs/name
+      volumes:
+        - name: config-volume
+          configMap:
+            name: hdfs-config
+      {{- if .Values.persistence.enabled }}
+      volumeClaimTemplates:
+        - metadata:
+            name: data
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: {{ .Values.persistence.size }}
+            {{- if .Values.persistence.storageClass }}
+            storageClassName: "{{ .Values.persistence.storageClass }}"
+            {{- end }}
+      {{- end }}
+
+---
+
+# templates/datanode.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: datanode
+spec:
+  replicas: {{ .Values.replicaCount.datanode }}
+  selector:
+    matchLabels:
+      app: datanode
+  serviceName: datanode
+  template:
+    metadata:
+      labels:
+        app: datanode
+    spec:
+      containers:
+      - name: datanode
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        command: ["hdfs", "datanode"]
+        ports:
+        - containerPort: 50010
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/hadoop
+        - name: data
+          mountPath: /hadoop/dfs/data
+      volumes:
+        - name: config-volume
+          configMap:
+            name: hdfs-config
+      {{- if .Values.persistence.enabled }}
+      volumeClaimTemplates:
+        - metadata:
+            name: data
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: {{ .Values.persistence.size }}
+            {{- if .Values.persistence.storageClass }}
+            storageClassName: "{{ .Values.persistence.storageClass }}"
+            {{- end }}
+      {{- end }}
+
+---
+
+# templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hdfs-namenode
+spec:
+  selector:
+    app: namenode
+  ports:
+    - protocol: TCP
+      port: 8020
+      targetPort: 8020
+  type: {{ .Values.service.type }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hdfs-datanode
+spec:
+  selector:
+    app: datanode
+  ports:
+    - protocol: TCP
+      port: 50010
+      targetPort: 50010
+  type: {{ .Values.service.type }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zkfc
+spec:
+  selector:
+    app: zkfc
+  ports:
+    - protocol: TCP
+      port: 8019
+      targetPort: 8019
+  type: {{ .Values.service.type }}
+
+
+---
+# templates/zkfc.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zkfc
+  labels:
+    app: zkfc
+spec:
+  replicas: {{ .Values.replicaCount.zkfc }}
+  selector:
+    matchLabels:
+      app: zkfc
+  serviceName: zkfc
+  template:
+    metadata:
+      labels:
+        app: zkfc
+    spec:
+      containers:
+      - name: zkfc
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        command: ["hdfs", "zkfc"]
+        ports:
+        - containerPort: 8019
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/hadoop
+      volumes:
+      - name: config-volume
+        configMap:
+          name: hdfs-config
+
+
+# templates/route.yaml
+{{- if .Values.route.enabled }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hdfs-ui
+spec:
+  host: {{ .Values.route.host }}
+  to:
+    kind: Service
+    name: hdfs-namenode
+  port:
+    targetPort: 8020
+  tls:
+    termination: edge
+{{- end }}
