@@ -3,6 +3,8 @@ kind: Namespace
 metadata:
   name: cassandra-prod
 ---
+# 🔐 Admin credentials (Cassandra superuser)
+# You can pre-create this secret with a random password (recommended) or let this YAML hold it.
 apiVersion: v1
 kind: Secret
 metadata:
@@ -11,10 +13,9 @@ metadata:
 type: Opaque
 stringData:
   username: cassadmin
-  # This generates a random password on deployment using OpenShift downward API.
-  # If your operator does not support template substitution, generate beforehand.
-  password: "{{ random 16 }}"
+  password: "{{ random 16 }}"  # Replace dynamically or pre-generate via CLI
 ---
+# 🧱 Cassandra Cluster (1 DC, 3 racks/nodes)
 apiVersion: cassandra.datastax.com/v1beta1
 kind: CassandraDatacenter
 metadata:
@@ -26,42 +27,52 @@ spec:
   serverVersion: "4.1.3"
   managementApiAuth:
     insecure: false
-    manual: false
     enabled: true
+    manual: false
     secretRef:
       name: cassandra-admin-secret
   size: 3
+  racks:
+    - name: rack1
+    - name: rack2
+    - name: rack3
   storageConfig:
     cassandraDataVolumeClaimSpec:
-      storageClassName: gp3
-      accessModes: ["ReadWriteOnce"]
+      storageClassName: efs-sc      # 🔸 Your EFS storage class name
+      accessModes: ["ReadWriteMany"]
       resources:
         requests:
           storage: 100Gi
   resources:
     requests:
-      cpu: 1000m
-      memory: 2Gi
+      cpu: "1000m"
+      memory: "4Gi"
     limits:
-      cpu: 2000m
-      memory: 4Gi
-  racks:
-    - name: rack1
-    - name: rack2
-    - name: rack3
+      cpu: "2000m"
+      memory: "8Gi"
   config:
     cassandra-yaml:
-      num_tokens: 16
       authenticator: PasswordAuthenticator
       authorizer: CassandraAuthorizer
       role_manager: CassandraRoleManager
+      num_tokens: 16
       start_native_transport: true
       start_rpc: false
+      # 🔒 Enable client-node and node-node encryption (optional, recommended)
+      server_encryption_options:
+        internode_encryption: all
+        require_client_auth: true
+        keystore_password: cassandra
+        truststore_password: cassandra
+      client_encryption_options:
+        enabled: true
+        optional: false
+        require_client_auth: false
+        keystore_password: cassandra
+        truststore_password: cassandra
     jvm-options:
       initial_heap_size: "2G"
       max_heap_size: "4G"
-      additional-jvm-opts:
-        - "-Dcassandra.replace_address_first_boot=true"
   podTemplateSpec:
     metadata:
       labels:
@@ -77,7 +88,7 @@ spec:
             - containerPort: 7001
               name: tls-intra-node
 ---
-# Service to expose CQL port
+# 🧭 Internal Service for intra-cluster and in-cluster access
 apiVersion: v1
 kind: Service
 metadata:
@@ -94,7 +105,7 @@ spec:
   selector:
     app: cassandra
 ---
-# Route for external access in OpenShift
+# 🌐 External access (OpenShift Route)
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -107,4 +118,4 @@ spec:
   port:
     targetPort: cql
   tls:
-    termination: edge
+    termination: passthrough
